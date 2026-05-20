@@ -5,6 +5,8 @@
 [build.environment]
   NODE_VERSION = "20"
 
+  VITE_SUPABASE_URL = "https://nicgovemgasbnxhbjbrm.supabase.co"
+  VITE_SUPABASE_ANON_KEY = "sb_publishable_Vr5iXxEuVwYPFXCUolEm-Q_w1y7Nmyi"
 [[redirects]]
   from = "/*"
   to = "/index.html"
