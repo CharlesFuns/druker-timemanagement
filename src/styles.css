@@ -1384,6 +1384,88 @@ code {
   border-radius: 14px;
 }
 
+.agent-hero {
+  padding: clamp(24px, 4vw, 44px);
+  background:
+    radial-gradient(circle at 86% 20%, rgba(95, 224, 183, 0.24), transparent 32%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.92), rgba(230, 250, 250, 0.72));
+}
+
+.agent-hero h2 {
+  max-width: 760px;
+  margin: 0;
+  color: var(--brand-deep);
+  font-size: clamp(1.9rem, 3.8vw, 4rem);
+  line-height: 1;
+  letter-spacing: -0.05em;
+}
+
+.agent-status-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  max-width: 920px;
+  margin-top: 26px;
+}
+
+.agent-layout {
+  grid-template-columns: minmax(0, 0.95fr) minmax(360px, 1.05fr);
+}
+
+.agent-token-box,
+.agent-config-block {
+  display: grid;
+  gap: 10px;
+  margin: 14px 0;
+}
+
+.agent-config-block span {
+  color: var(--gray-700);
+  font-weight: 700;
+}
+
+.agent-config-block code,
+.agent-config-block pre {
+  display: block;
+  width: 100%;
+  margin: 0;
+  padding: 14px;
+  overflow: auto;
+  color: var(--brand-deep);
+  line-height: 1.6;
+  white-space: pre-wrap;
+  background: rgba(0, 183, 189, 0.08);
+  border: 1px solid rgba(0, 183, 189, 0.14);
+  border-radius: 16px;
+}
+
+.agent-copy-notice {
+  display: inline-flex;
+  padding: 9px 12px;
+  margin-top: 16px;
+  color: var(--brand-deep);
+  font-weight: 800;
+  background: rgba(95, 224, 183, 0.26);
+  border: 1px solid rgba(0, 183, 189, 0.18);
+  border-radius: 999px;
+}
+
+.agent-capability-grid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.agent-capability-grid span {
+  padding: 13px 12px;
+  color: var(--brand-deep);
+  font-weight: 800;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.74);
+  border: 1px solid rgba(0, 183, 189, 0.14);
+  border-radius: 16px;
+}
+
 @supports not (background: color-mix(in srgb, red 20%, white)) {
   .timeline-block {
     background: rgba(255, 255, 255, 0.94);
@@ -1413,7 +1495,9 @@ code {
   .two-column,
   .chart-grid,
   .goal-grid,
-  .task-grid {
+  .task-grid,
+  .agent-status-row,
+  .agent-capability-grid {
     grid-template-columns: 1fr;
   }
 

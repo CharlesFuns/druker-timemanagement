@@ -39,6 +39,7 @@ const VIEWS = [
   { key: 'timeline', label: '时间轴', eyebrow: 'Timeline' },
   { key: 'dashboard', label: '日看板', eyebrow: 'Insight' },
   { key: 'review', label: '每日复盘', eyebrow: 'Awake' },
+  { key: 'agent', label: 'Agent 接入', eyebrow: 'MCP' },
 ];
 
 const EMPTY_DATA = {
@@ -159,6 +160,32 @@ function formatEmotionValue(value) {
   const emotion = getEmotionMeta(value);
   if (emotion) return `${emotion.icon} ${emotion.label}`;
   return value?.trim?.() || '未选择';
+}
+
+function bytesToBase64Url(bytes) {
+  let text = '';
+  bytes.forEach((byte) => {
+    text += String.fromCharCode(byte);
+  });
+  return window.btoa(text).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
+}
+
+function bufferToHex(buffer) {
+  return Array.from(new Uint8Array(buffer))
+    .map((byte) => byte.toString(16).padStart(2, '0'))
+    .join('');
+}
+
+async function sha256Hex(text) {
+  const encoded = new TextEncoder().encode(text);
+  const digest = await window.crypto.subtle.digest('SHA-256', encoded);
+  return bufferToHex(digest);
+}
+
+function createAgentToken() {
+  const bytes = new Uint8Array(32);
+  window.crypto.getRandomValues(bytes);
+  return `et_${bytesToBase64Url(bytes)}`;
 }
 
 function Button({ children, variant = 'primary', size = 'md', className = '', ...props }) {
@@ -802,6 +829,7 @@ function ViewRenderer({ view, ...props }) {
   if (view === 'timeline') return h(TimelinePage, props);
   if (view === 'dashboard') return h(DashboardPage, props);
   if (view === 'review') return h(ReviewPage, props);
+  if (view === 'agent') return h(AgentPage, props);
   return h(TodayPage, props);
 }
 
@@ -1383,6 +1411,173 @@ function ReviewDetailModal({ record, analysis, onClose, onEdit }) {
         { className: 'modal-actions' },
         h(Button, { variant: 'secondary', onClick: onClose }, '关闭'),
         h(Button, { onClick: onEdit }, '编辑这天复盘'),
+      ),
+    ),
+  );
+}
+
+function AgentPage({ session }) {
+  const [agentMeta, setAgentMeta] = useState(session.user.user_metadata?.effective_time_agent || null);
+  const [newToken, setNewToken] = useState('');
+  const [copyNotice, setCopyNotice] = useState('');
+  const [working, setWorking] = useState(false);
+  const siteOrigin = window.location.origin;
+  const apiUrl = `${siteOrigin}/api/agent-sync`;
+  const downloadUrl = `${siteOrigin}/effective-time-remote-mcp.cjs`;
+  const tokenForConfig = newToken || '粘贴你刚生成的 Agent 口令';
+  const configText = `[mcp_servers.effective-time]\ncommand = "node"\nargs = ["/你电脑上的路径/effective-time-remote-mcp.cjs"]\nenv = { EFFECTIVE_TIME_API_URL = "${apiUrl}", EFFECTIVE_TIME_AGENT_TOKEN = "${tokenForConfig}" }\n`;
+  const installText = `curl -L ${downloadUrl} -o ~/effective-time-remote-mcp.cjs`;
+  const isActive = agentMeta?.status === 'active' && agentMeta?.token_hash;
+
+  async function copyText(text, label = '已复制') {
+    await navigator.clipboard.writeText(text);
+    setCopyNotice(label);
+    window.setTimeout(() => setCopyNotice(''), 2200);
+  }
+
+  async function refreshUserMeta() {
+    const { data, error } = await supabase.auth.getUser();
+    if (error) throw error;
+    setAgentMeta(data.user?.user_metadata?.effective_time_agent || null);
+  }
+
+  async function generateToken() {
+    setWorking(true);
+    setCopyNotice('');
+    try {
+      const token = createAgentToken();
+      const token_hash = await sha256Hex(token);
+      const nextMeta = {
+        token_hash,
+        token_prefix: `${token.slice(0, 10)}...${token.slice(-4)}`,
+        status: 'active',
+        created_at: new Date().toISOString(),
+        last_used_at: null,
+      };
+      const { error } = await supabase.auth.updateUser({
+        data: {
+          ...(session.user.user_metadata || {}),
+          effective_time_agent: nextMeta,
+        },
+      });
+      if (error) throw error;
+      setNewToken(token);
+      setAgentMeta(nextMeta);
+      await copyText(token, '新的 Agent 口令已复制');
+    } catch (err) {
+      setCopyNotice(err.message || '生成失败');
+    } finally {
+      setWorking(false);
+    }
+  }
+
+  async function revokeToken() {
+    setWorking(true);
+    setCopyNotice('');
+    try {
+      const nextMeta = {
+        ...(agentMeta || {}),
+        token_hash: null,
+        status: 'revoked',
+        revoked_at: new Date().toISOString(),
+      };
+      const { error } = await supabase.auth.updateUser({
+        data: {
+          ...(session.user.user_metadata || {}),
+          effective_time_agent: nextMeta,
+        },
+      });
+      if (error) throw error;
+      setNewToken('');
+      setAgentMeta(nextMeta);
+      await refreshUserMeta();
+      setCopyNotice('已撤销旧口令');
+    } catch (err) {
+      setCopyNotice(err.message || '撤销失败');
+    } finally {
+      setWorking(false);
+    }
+  }
+
+  return h(
+    'div',
+    { className: 'page-stack' },
+    h(
+      'section',
+      { className: 'panel agent-hero' },
+      h('p', { className: 'eyebrow' }, 'Agent Access'),
+      h('h2', null, '让 Codex 只操作自己的有效时间。'),
+      h(
+        'p',
+        { className: 'muted' },
+        '这里生成的是个人口令，只绑定当前登录账号。它不能看到后台密钥，也不能操作别人的数据。',
+      ),
+      h(
+        'div',
+        { className: 'agent-status-row' },
+        h(StatCard, { label: '当前状态', value: isActive ? '已开启' : '未开启', tone: isActive ? 'green' : 'gray' }),
+        h(StatCard, { label: '口令标识', value: agentMeta?.token_prefix || '未生成', tone: 'cyan' }),
+        h(StatCard, { label: '最近使用', value: agentMeta?.last_used_at ? formatClock(agentMeta.last_used_at) : '暂无', tone: 'blue' }),
+      ),
+      copyNotice ? h('div', { className: 'agent-copy-notice' }, copyNotice) : null,
+    ),
+    h(
+      'section',
+      { className: 'two-column agent-layout' },
+      h(
+        'div',
+        { className: 'panel' },
+        h(SectionTitle, {
+          eyebrow: 'Step 1',
+          title: '生成个人 Agent 口令',
+          copy: '口令只显示一次。请复制到自己的 Codex 配置里，不要发给别人。',
+        }),
+        newToken
+          ? h(
+              'div',
+              { className: 'agent-token-box' },
+              h(TextArea, { value: newToken, readOnly: true, rows: 3 }),
+              h(Button, { onClick: () => copyText(newToken, 'Agent 口令已复制') }, '复制口令'),
+            )
+          : h(EmptyState, {
+              title: isActive ? '已有一个可用口令' : '还没有个人口令',
+              copy: isActive ? '出于安全原因，旧口令不会再次明文显示。如忘记了，请重新生成。' : '点击下面按钮生成一个只属于你的 Agent 口令。',
+            }),
+        h(
+          'div',
+          { className: 'form-actions' },
+          h(Button, { onClick: generateToken, disabled: working }, working ? '处理中' : isActive ? '重新生成口令' : '生成口令'),
+          isActive ? h(Button, { variant: 'secondary', onClick: revokeToken, disabled: working }, '撤销口令') : null,
+        ),
+      ),
+      h(
+        'div',
+        { className: 'panel' },
+        h(SectionTitle, {
+          eyebrow: 'Step 2',
+          title: '安装 MCP 接口',
+          copy: '同事只需要下载这个轻量 MCP 文件，再把下面配置放进自己的 Codex。',
+        }),
+        h('div', { className: 'agent-config-block' }, h('span', null, '下载 MCP 文件'), h('code', null, installText)),
+        h(Button, { variant: 'secondary', onClick: () => copyText(installText, '下载命令已复制') }, '复制下载命令'),
+        h('div', { className: 'agent-config-block' }, h('span', null, 'Codex 配置'), h('pre', null, configText)),
+        h(Button, { onClick: () => copyText(configText, 'MCP 配置已复制') }, '复制 MCP 配置'),
+      ),
+    ),
+    h(
+      'section',
+      { className: 'panel' },
+      h(SectionTitle, {
+        eyebrow: 'What it can do',
+        title: '这个接口能做什么',
+        copy: '接入后，Codex 可以为当前账号创建任务、开始/暂停/完成任务、创建日程、补录或修改时间、保存每日复盘。',
+      }),
+      h(
+        'div',
+        { className: 'agent-capability-grid' },
+        ['创建任务', '开始/暂停/完成', '创建日程', '补录时间', '修改时间记录', '保存每日复盘'].map((item) =>
+          h('span', { key: item }, item),
+        ),
       ),
     ),
   );

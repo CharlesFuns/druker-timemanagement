@@ -7,7 +7,7 @@
     "dev": "vite --host 0.0.0.0",
     "build": "vite build",
     "preview": "vite preview --host 0.0.0.0",
-    "check": "node --check src/main.js && node --check src/lib/supabase.js && node --check src/lib/time.js && node --check src/lib/constants.js && node --check mcp/effective-time-mcp.js && node --check netlify/functions/agent-sync.mjs",
+    "check": "node --check src/main.js && node --check src/lib/supabase.js && node --check src/lib/time.js && node --check src/lib/constants.js && node --check mcp/effective-time-mcp.js && node --check netlify/functions/agent-sync.mjs && node --check public/effective-time-remote-mcp.cjs && node --check mcp/effective-time-remote-mcp.cjs",
     "mcp:effective-time": "node mcp/effective-time-mcp.js"
   },
   "dependencies": {
