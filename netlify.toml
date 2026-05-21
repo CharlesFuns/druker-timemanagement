@@ -8,6 +8,11 @@
   VITE_SUPABASE_URL = "https://nicgovemgasbnxhbjbrm.supabase.co"
   VITE_SUPABASE_ANON_KEY = "sb_publishable_Vr5iXxEuVwYPFXCUolEm-Q_w1y7Nmyi"
 [[redirects]]
+  from = "/api/agent-sync"
+  to = "/.netlify/functions/agent-sync"
+  status = 200
+
+[[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
