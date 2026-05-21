@@ -14,6 +14,12 @@ const projectRoot = resolve(__dirname, '..');
 const CATEGORY_VALUES = new Set(['work', 'growth', 'family', 'health', 'other']);
 const PRIORITY_VALUES = new Set(['high', 'medium', 'low']);
 
+class NoopWebSocket {
+  constructor() {
+    throw new Error('Realtime is not used by the effective-time MCP server.');
+  }
+}
+
 function loadEnvFile(filePath) {
   if (!existsSync(filePath)) return;
   const content = readFileSync(filePath, 'utf8');
@@ -51,6 +57,7 @@ function makeClient() {
   }
   return createClient(supabaseUrl, serviceRoleKey, {
     auth: { persistSession: false, autoRefreshToken: false },
+    realtime: { transport: NoopWebSocket },
   });
 }
 

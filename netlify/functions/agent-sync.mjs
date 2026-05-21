@@ -3,6 +3,12 @@ import { createClient } from '@supabase/supabase-js';
 const CATEGORY_VALUES = new Set(['work', 'growth', 'family', 'health', 'other']);
 const PRIORITY_VALUES = new Set(['high', 'medium', 'low']);
 
+class NoopWebSocket {
+  constructor() {
+    throw new Error('Realtime is not used by the agent sync endpoint.');
+  }
+}
+
 function json(statusCode, body) {
   return {
     statusCode,
@@ -281,6 +287,7 @@ export async function handler(event) {
     if (!providedToken || providedToken !== config.token) return json(401, { ok: false, error: '同步口令不正确。' });
     const supabase = createClient(config.supabaseUrl, config.serviceRoleKey, {
       auth: { persistSession: false, autoRefreshToken: false },
+      realtime: { transport: NoopWebSocket },
     });
     const userId = await resolveUserId(supabase, config);
     const body = JSON.parse(event.body || '{}');
