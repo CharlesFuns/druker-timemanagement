@@ -37,8 +37,8 @@ export function formatDuration(totalSeconds = 0, compact = false) {
   const minutes = Math.floor((seconds % 3600) / 60);
   const rest = seconds % 60;
   if (compact) {
-    if (hours > 0) return `${hours}h ${minutes}m`;
-    if (minutes > 0) return `${minutes}m`;
+    if (hours > 0) return `${hours}h ${minutes}min ${rest}s`;
+    if (minutes > 0) return `${minutes}min ${rest}s`;
     return `${rest}s`;
   }
   if (hours > 0) return `${hours} 小时 ${minutes} 分钟`;

@@ -1,0 +1,9 @@
+<svg width="160" height="160" viewBox="0 0 160 160" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Focus Steer logo">
+  <path d="M21 122V42C21 29.85 30.85 20 43 20H104L94 39H47C43.13 39 40 42.13 40 46V69H88L78 88H40V122H21Z" fill="white"/>
+  <path d="M63 122L80 101H122C133.6 101 143 91.6 143 80C143 68.4 133.6 59 122 59H94C91.24 59 89 61.24 89 64C89 66.76 91.24 69 94 69H121C126.52 69 131 73.48 131 79C131 84.52 126.52 89 121 89H94C77.98 89 65 76.02 65 60C65 43.98 77.98 31 94 31H108C117.86 31 126.98 34.12 134.45 39.43L145 27L150 67L113 53L123.2 49.8C119.1 47.31 114.3 46 109 46H94C86.27 46 80 52.27 80 60C80 67.73 86.27 74 94 74H121C134.81 74 146 85.19 146 99C146 112.81 134.81 124 121 124H63V122Z" fill="white"/>
+  <path d="M120 111C134.9 102.84 145 87.01 145 68.83" stroke="white" stroke-width="5" stroke-linecap="round" opacity="0.66"/>
+  <path d="M100 119C116.02 119 130.58 112.8 141.43 102.67" stroke="white" stroke-width="4" stroke-linecap="round" opacity="0.42"/>
+  <circle cx="105" cy="98" r="7" fill="white" opacity="0.9"/>
+  <path d="M110 94L136 69" stroke="white" stroke-width="5" stroke-linecap="round" opacity="0.9"/>
+  <path d="M143 86H153M134 52H144M82 102H92" stroke="white" stroke-width="5" stroke-linecap="round" opacity="0.52"/>
+</svg>
